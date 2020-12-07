@@ -57,28 +57,24 @@ fn search_rule(rules: &HashMap<String, Vec<(u32, String)>>, search_color: &Strin
     return 0;
 }
 
-fn accum_path_stats(rules: &HashMap<String, Vec<(u32, String)>>, candidate_color: &String, coeff: u32) -> u32 {
-    let mut current_color = candidate_color;
-
-    let valid_contents: &Vec<(u32, String)> = match rules.get(current_color) {
+fn n_bags_in_given_bag(rules: &HashMap<String, Vec<(u32, String)>>, candidate_color: &String) -> u32 {
+    let valid_contents: &Vec<(u32, String)> = match rules.get(candidate_color) {
         Some(x) => x,
-        None => { return coeff; }
+        None => { return 0 as u32; }
     };
 
-    let mut summables: Vec<u32> = vec![];
-    for (cnt, color) in valid_contents {
-        let sub_accum = accum_path_stats(rules, color, coeff * cnt);
-        summables.push(sub_accum);
+    if valid_contents.len() == 0 {
+        return 0;
     }
 
-    let sum: u32 = summables.iter().sum();
-    if sum == 0 {
-        return coeff;
-    } else {
-        return coeff + sum;
-    };
-}
+    let mut sum: u32 = 0;
 
+    for (cnt, color) in valid_contents {
+        sum = sum + cnt + (cnt * n_bags_in_given_bag(rules, color));
+    }
+
+    return sum;
+}
 
 fn main() {
     let lines = slurp_input("input");
@@ -93,8 +89,8 @@ fn main() {
     }
     println!("count: {}", count);
 
-    let accum: u32 = accum_path_stats(&validity_mapping, &search_term, 1);
-    println!("accum: {}", accum - 1);
+    let accum: u32 = n_bags_in_given_bag(&validity_mapping, &search_term);
+    println!("accum: {}", accum);
 }
 
 #[cfg(test)]
@@ -126,17 +122,15 @@ mod tests {
 
     #[test]
     fn accum_path_stats_test_example() {
-        // TODO: This test fails because accum_path_stats is counting the root bag and is thus off
-        // by 1.
         let rules = parse_bag_rules(&slurp_input("example"));
-        let accum = accum_path_stats(&rules, &("shiny gold".to_string()), 1);
+        let accum = n_bags_in_given_bag(&rules, &("shiny gold".to_string()));
         assert_eq!(126, accum);
     }
 
     #[test]
     fn accum_path_stats_test_example1() {
         let rules = parse_bag_rules(&slurp_input("example1"));
-        let accum = accum_path_stats(&rules, &("light red".to_string()), 1);
-        assert_eq!(27, accum);
+        let accum = n_bags_in_given_bag(&rules, &("light red".to_string()));
+        assert_eq!(26, accum);
     }
 }
