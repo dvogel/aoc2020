@@ -24,10 +24,10 @@ fn update_seats(table: &Vec<Vec<char>>) -> (u32, Vec<Vec<char>>) {
     let table_height = table.len() as i32;
     let table_width = table[0].len() as i32;
     for (y, row) in table.iter().enumerate() {
-        'cell_for: for (x, cell) in row.iter().enumerate() {
+        for (x, cell) in row.iter().enumerate() {
             if *cell == '.' {
                 // no-op
-            } else if *cell == '#' {
+            } else if *cell == '#' || *cell == 'L' {
                 let mut adj_occupied = 0;
                 for (off_x, off_y) in adj_coords.iter() {
                     let tmp_x = (x as i32) + off_x;
@@ -40,24 +40,13 @@ fn update_seats(table: &Vec<Vec<char>>) -> (u32, Vec<Vec<char>>) {
                     }
                 }
                 // println!("({}, {}) => {} adj", x, y, adj_occupied);
-                if adj_occupied >= 4 {
+                if *cell == '#' && adj_occupied >= 4 {
                     cloned[y][x] = 'L';
                     updates = updates + 1;
+                } else if *cell == 'L' && adj_occupied == 0 {
+                    cloned[y][x] = '#';
+                    updates = updates + 1;
                 }
-            } else if *cell == 'L' {
-                for (off_x, off_y) in adj_coords.iter() {
-                    let tmp_x = (x as i32) + off_x;
-                    let tmp_y = (y as i32) + off_y;
-                    if (tmp_x >= 0) && (tmp_y >= 0) && (tmp_y < table_height) && (tmp_x < table_width) {
-                        let adj_cell = table[tmp_y as usize][tmp_x as usize];
-                        if adj_cell == '#' {
-                            cloned[y][x] = 'L';
-                            continue 'cell_for;
-                        }
-                    }
-                }
-                cloned[y][x] = '#';
-                updates = updates + 1;
             } else {
                 println!("unmatched input: {}", *cell)
             }
