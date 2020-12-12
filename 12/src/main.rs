@@ -1,5 +1,7 @@
 use std::fs;
-// use regex::Regex;
+use vecmath;
+
+// part 1:Facing S at (658, 824), with distance of 1482
 
 const NORTH: char = 'N';
 const SOUTH: char = 'S';
@@ -13,6 +15,11 @@ const RIGHT: char = 'R';
 struct Step {
     direction: char,
     distance: i32,
+}
+
+struct Pos {
+    x: i32,
+    y: i32,
 }
 
 fn slurp_input(filename: &str) -> Vec<String> {
@@ -62,48 +69,50 @@ fn rotate_right(start_dir: char, degrees: i32) -> char {
     return rotate_left(start_dir, 360 - degrees);
 }
 
-fn exec_step(step: &Step, cur_dir: char, x: i32, y: i32) -> (char, i32, i32) {
-    if step.direction == 'N' {
-        return (cur_dir, x, y - step.distance);
-    } else if step.direction == 'S' {
-        return (cur_dir, x, y + step.distance);
-    } else if step.direction == 'W' {
-        return (cur_dir, x - step.distance, y);
-    } else if step.direction == 'E' {
-        return (cur_dir, x + step.distance, y);
-    } else if step.direction == 'F' {
-        return exec_step(&Step{direction: cur_dir, distance: step.distance}, cur_dir, x, y);
-    } else if step.direction == 'L' {
+fn exec_step(step: &Step, cur_dir: char, pos: Pos) -> (char, Pos) {
+    if step.direction == NORTH {
+        return (cur_dir, Pos{x: pos.x, y: pos.y - step.distance});
+    } else if step.direction == SOUTH {
+        return (cur_dir, Pos{x: pos.x, y: pos.y + step.distance});
+    } else if step.direction == WEST {
+        return (cur_dir, Pos{x: pos.x - step.distance, y: pos.y});
+    } else if step.direction == EAST {
+        return (cur_dir, Pos{x: pos.x + step.distance, y: pos.y});
+    } else if step.direction == FORWARD {
+        return exec_step(&Step{
+            direction: cur_dir,
+            distance: step.distance},
+            cur_dir,
+            pos);
+    } else if step.direction == LEFT {
         let new_dir = rotate_left(cur_dir, step.distance);
-        return (new_dir, x, y);
-    } else if step.direction == 'R' {
+        return (new_dir, pos);
+    } else if step.direction == RIGHT {
         let new_dir = rotate_right(cur_dir, step.distance);
-        return (new_dir, x, y);
+        return (new_dir, pos);
     } else {
         panic!();
     }
 }
 
-fn exec_steps(steps: &Vec<Step>) -> (char, i32, i32) {
+fn exec_steps(steps: &Vec<Step>) -> (char, Pos) {
     let mut dir = EAST;
-    let mut x = 0;
-    let mut y = 0;
+    let mut pos = Pos{x: 0, y: 0};
 
     for step in steps {
-        let (new_dir, new_x, new_y) = exec_step(step, dir, x, y);
-        x = new_x;
-        y = new_y;
+        let (new_dir, new_pos) = exec_step(step, dir, pos);
+        pos = new_pos;
         dir = new_dir;
     }
 
-    return (dir, x, y);
+    return (dir, pos);
 }
 
 fn main() {
     let lines = slurp_input("input");
     let steps: Vec<Step> = decode_steps(&lines);
-    let (dir, x, y) = exec_steps(&steps);
-    println!("Facing {} at ({}, {}), with distance of {}", dir, x, y, x.abs() + y.abs());
+    let (dir, pos) = exec_steps(&steps);
+    println!("Facing {} at ({}, {}), with distance of {}", dir, pos.x, pos.y, pos.x.abs() + pos.y.abs());
 }
 
 #[cfg(test)]
@@ -114,7 +123,15 @@ mod tests {
     fn test1() {
         let lines = slurp_input("example");
         let steps: Vec<Step> = decode_steps(&lines);
-        let (dir, x, y) = exec_steps(&steps);
-        assert_eq!(x.abs() + y.abs(), 25);
+        let (dir, pos) = exec_steps(&steps);
+        assert_eq!(pos.x.abs() + pos.y.abs(), 25);
+    }
+
+    #[test]
+    fn test2() {
+        let lines = slurp_input("example");
+        let steps: Vec<Step> = decode_steps(&lines);
+        let (dir, pos) = exec_steps(&steps);
+        assert_eq!(pos.x.abs() + pos.y.abs(), 286);
     }
 }
