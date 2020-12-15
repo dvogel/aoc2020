@@ -1,32 +1,29 @@
-use std::collections::VecDeque;
 use std::collections::HashMap;
 
 fn solve(input: &Vec<u32>, n_turns: u32) -> u32 {
-    let mut mem: HashMap<u32, VecDeque<u32>> = HashMap::new();
+    let mut mem: HashMap<u32, (u32, u32)> = HashMap::new();
     for (idx, &num) in input.iter().enumerate() {
-        let mut turns: VecDeque<u32> = VecDeque::new();
-        turns.push_front(idx as u32 + 1);
-        mem.insert(num, turns);
+        mem.insert(num, (idx as u32 + 1, 0));
     }
 
     let mut turn: u32 = input.len() as u32 + 1;
     let mut prev_value: u32 = input[input.len() - 1];
     while turn <= n_turns {
         let turns_for_prev = mem.get_mut(&prev_value).unwrap();
-        let to_say = match turns_for_prev.len() {
-            0 => panic!("This should never happen."),
-            1 => 0,
+        let to_say = match turns_for_prev.1 {
+            0 => 0,
             _ => {
-                turns_for_prev[0] - turns_for_prev[1]
+                turns_for_prev.0 - turns_for_prev.1
             }
         };
 
         match mem.get_mut(&to_say) {
-            Some(turns_for_curr) => { turns_for_curr.push_front(turn); },
+            Some(turns_for_curr) => {
+                let prev_turn: u32 = turns_for_curr.0;
+                mem.insert(to_say, (turn, prev_turn));
+            },
             None => { 
-                let mut turns = VecDeque::new();
-                turns.push_front(turn);
-                mem.insert(to_say, turns);
+                mem.insert(to_say, (turn, 0));
             },
         };
 
