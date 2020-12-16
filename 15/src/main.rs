@@ -8,8 +8,9 @@ fn solve(input: &Vec<u32>, n_turns: u32) -> u32 {
 
     let mut turn: u32 = input.len() as u32 + 1;
     let mut prev_value: u32 = input[input.len() - 1];
+    let mut turns_for_prev: (u32, u32) = *mem.get(&prev_value).unwrap();
     while turn <= n_turns {
-        let turns_for_prev = mem.get_mut(&prev_value).unwrap();
+        // let turns_for_prev = mem.get_mut(&prev_value).unwrap();
         let to_say = match turns_for_prev.1 {
             0 => 0,
             _ => {
@@ -18,12 +19,13 @@ fn solve(input: &Vec<u32>, n_turns: u32) -> u32 {
         };
 
         match mem.get_mut(&to_say) {
-            Some(turns_for_curr) => {
-                let prev_turn: u32 = turns_for_curr.0;
-                mem.insert(to_say, (turn, prev_turn));
+            Some(turns_for_said) => {
+                turns_for_prev = (turn, turns_for_said.0);
+                mem.insert(to_say, turns_for_prev);
             },
             None => { 
-                mem.insert(to_say, (turn, 0));
+                turns_for_prev = (turn, 0);
+                mem.insert(to_say, turns_for_prev);
             },
         };
 
